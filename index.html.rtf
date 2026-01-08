@@ -1,0 +1,240 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww34000\viewh18200\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="en">\
+<head>\
+    <meta charset="UTF-8">\
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+    <title>Real Estate Lockbox Manager</title>\
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>\
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>\
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>\
+    <script src="https://cdn.tailwindcss.com"></script>\
+</head>\
+<body>\
+    <div id="root"></div>\
+    <script type="text/babel">\
+        const \{ useState, useEffect \} = React;\
+        \
+        function LockboxQRSystem() \{\
+            const [lockboxes, setLockboxes] = useState([\
+                \{ id: '31006630', shackleCode: '8663', status: 'available' \},\
+                \{ id: '31007017', shackleCode: '4474', status: 'available' \},\
+                \{ id: '31007180', shackleCode: '4587', status: 'available' \},\
+                \{ id: '31007251', shackleCode: '4682', status: 'available' \},\
+                \{ id: '31007296', shackleCode: '7890', status: 'available' \},\
+                \{ id: '31015898', shackleCode: '6831', status: 'available' \},\
+                \{ id: '33267025', shackleCode: '4284', status: 'available' \},\
+                \{ id: '34451099', shackleCode: '3265', status: 'available' \}\
+            ]);\
+            \
+            const [properties] = useState([\
+                \{ id: 'P001', address: '123 Main St, Savannah, GA' \},\
+                \{ id: 'P002', address: '456 Oak Ave, Savannah, GA' \},\
+                \{ id: 'P003', address: '789 Pine Rd, Savannah, GA' \},\
+                \{ id: 'P004', address: '321 Elm Dr, Savannah, GA' \}\
+            ]);\
+            \
+            const [selectedLockbox, setSelectedLockbox] = useState('');\
+            const [selectedProperty, setSelectedProperty] = useState('');\
+            const [agentName, setAgentName] = useState('');\
+            const [qrCode, setQrCode] = useState('');\
+            const [checkoutHistory, setCheckoutHistory] = useState([]);\
+\
+            const generateQRCode = async (data) => \{\
+                const qrData = encodeURIComponent(JSON.stringify(data));\
+                return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=$\{qrData\}`;\
+            \};\
+\
+            const handleCheckout = async () => \{\
+                if (!selectedLockbox || !selectedProperty || !agentName) \{\
+                    alert('Please fill in all fields');\
+                    return;\
+                \}\
+\
+                const lockbox = lockboxes.find(lb => lb.id === selectedLockbox);\
+                const property = properties.find(p => p.id === selectedProperty);\
+\
+                const checkoutData = \{\
+                    lockboxId: selectedLockbox,\
+                    shackleCode: lockbox.shackleCode,\
+                    propertyId: selectedProperty,\
+                    propertyAddress: property?.address,\
+                    agentName: agentName,\
+                    checkoutDate: new Date().toISOString(),\
+                    action: 'checkout'\
+                \};\
+\
+                const qrUrl = await generateQRCode(checkoutData);\
+                setQrCode(qrUrl);\
+                setLockboxes(lockboxes.map(lb => \
+                    lb.id === selectedLockbox ? \{ ...lb, status: 'checked-out' \} : lb\
+                ));\
+                setCheckoutHistory([checkoutData, ...checkoutHistory]);\
+                setSelectedLockbox('');\
+                setSelectedProperty('');\
+                setAgentName('');\
+            \};\
+\
+            const handleReturn = (lockboxId) => \{\
+                setLockboxes(lockboxes.map(lb => \
+                    lb.id === lockboxId ? \{ ...lb, status: 'available' \} : lb\
+                ));\
+                setCheckoutHistory(checkoutHistory.filter(h => h.lockboxId !== lockboxId));\
+            \};\
+\
+            const selectedLockboxData = lockboxes.find(lb => lb.id === selectedLockbox);\
+\
+            return (\
+                <div style=\{\{minHeight: '100vh', background: 'linear-gradient(to bottom right, #eff6ff, #e0e7ff)', padding: '24px'\}\}>\
+                    <div style=\{\{maxWidth: '1200px', margin: '0 auto'\}\}>\
+                        <div style=\{\{background: 'white', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '32px', marginBottom: '24px'\}\}>\
+                            <h1 style=\{\{fontSize: '30px', fontWeight: 'bold', color: '#1f2937', marginBottom: '24px'\}\}>\uc0\u55357 \u56593  Real Estate Lockbox Manager</h1>\
+\
+                            <div style=\{\{display: 'grid', gridTemplateColumns: window.innerWidth > 768 ? '1fr 1fr' : '1fr', gap: '32px'\}\}>\
+                                <div>\
+                                    <h2 style=\{\{fontSize: '20px', fontWeight: '600', color: '#374151', marginBottom: '16px'\}\}>Check Out Lockbox</h2>\
+\
+                                    <div style=\{\{marginBottom: '16px'\}\}>\
+                                        <label style=\{\{display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px'\}\}>\
+                                            Select Lockbox\
+                                        </label>\
+                                        <select\
+                                            value=\{selectedLockbox\}\
+                                            onChange=\{(e) => setSelectedLockbox(e.target.value)\}\
+                                            style=\{\{width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px'\}\}\
+                                        >\
+                                            <option value="">Choose a lockbox...</option>\
+                                            \{lockboxes.filter(lb => lb.status === 'available').map(lb => (\
+                                                <option key=\{lb.id\} value=\{lb.id\}>\
+                                                    \{lb.id\} - Code: \{lb.shackleCode\}\
+                                                </option>\
+                                            ))\}\
+                                        </select>\
+                                    </div>\
+\
+                                    \{selectedLockboxData && (\
+                                        <div style=\{\{marginBottom: '16px', padding: '12px', background: '#fef3c7', borderRadius: '8px', border: '1px solid #fbbf24'\}\}>\
+                                            <div style=\{\{fontSize: '14px', fontWeight: '600', color: '#92400e', marginBottom: '4px'\}\}>\
+                                                Shackle Code:\
+                                            </div>\
+                                            <div style=\{\{fontSize: '24px', fontWeight: 'bold', color: '#92400e', letterSpacing: '4px'\}\}>\
+                                                \{selectedLockboxData.shackleCode\}\
+                                            </div>\
+                                        </div>\
+                                    )\}\
+\
+                                    <div style=\{\{marginBottom: '16px'\}\}>\
+                                        <label style=\{\{display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px'\}\}>\
+                                            Assign to Property\
+                                        </label>\
+                                        <select\
+                                            value=\{selectedProperty\}\
+                                            onChange=\{(e) => setSelectedProperty(e.target.value)\}\
+                                            style=\{\{width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px'\}\}\
+                                        >\
+                                            <option value="">Choose a property...</option>\
+                                            \{properties.map(prop => (\
+                                                <option key=\{prop.id\} value=\{prop.id\}>\
+                                                    \{prop.id\} - \{prop.address\}\
+                                                </option>\
+                                            ))\}\
+                                        </select>\
+                                    </div>\
+\
+                                    <div style=\{\{marginBottom: '16px'\}\}>\
+                                        <label style=\{\{display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px'\}\}>\
+                                            Agent Name\
+                                        </label>\
+                                        <input\
+                                            type="text"\
+                                            value=\{agentName\}\
+                                            onChange=\{(e) => setAgentName(e.target.value)\}\
+                                            placeholder="Enter your name"\
+                                            style=\{\{width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px'\}\}\
+                                        />\
+                                    </div>\
+\
+                                    <button\
+                                        onClick=\{handleCheckout\}\
+                                        style=\{\{width: '100%', background: '#4f46e5', color: 'white', padding: '12px', borderRadius: '8px', fontWeight: '600', border: 'none', cursor: 'pointer'\}\}\
+                                    >\
+                                        Generate QR Code\
+                                    </button>\
+                                </div>\
+\
+                                <div style=\{\{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f9fafb', borderRadius: '12px', padding: '24px'\}\}>\
+                                    \{qrCode ? (\
+                                        <div style=\{\{textAlign: 'center'\}\}>\
+                                            <h3 style=\{\{fontSize: '18px', fontWeight: '600', color: '#374151', marginBottom: '16px'\}\}>\
+                                                Scan this QR Code\
+                                            </h3>\
+                                            <img src=\{qrCode\} alt="QR Code" style=\{\{border: '4px solid white', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', borderRadius: '8px'\}\} />\
+                                            <p style=\{\{fontSize: '14px', color: '#6b7280', marginTop: '16px'\}\}>\
+                                                Save or print this code for the lockbox\
+                                            </p>\
+                                        </div>\
+                                    ) : (\
+                                        <div style=\{\{textAlign: 'center', color: '#9ca3af'\}\}>\
+                                            <p style=\{\{fontSize: '48px', marginBottom: '16px'\}\}>\uc0\u55357 \u56561 </p>\
+                                            <p>QR Code will appear here</p>\
+                                        </div>\
+                                    )\}\
+                                </div>\
+                            </div>\
+                        </div>\
+\
+                        <div style=\{\{background: 'white', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '32px'\}\}>\
+                            <h2 style=\{\{fontSize: '20px', fontWeight: '600', color: '#374151', marginBottom: '16px'\}\}>\uc0\u55356 \u57312  Active Checkouts</h2>\
+                            \
+                            \{checkoutHistory.length === 0 ? (\
+                                <p style=\{\{color: '#6b7280', textAlign: 'center', padding: '32px'\}\}>No active checkouts</p>\
+                            ) : (\
+                                <div>\
+                                    \{checkoutHistory.map((checkout, index) => (\
+                                        <div key=\{index\} style=\{\{border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px'\}\}>\
+                                            <div style=\{\{flex: 1, minWidth: '250px'\}\}>\
+                                                <div style=\{\{fontWeight: '600', color: '#1f2937', marginBottom: '8px', fontSize: '16px'\}\}>\
+                                                    \uc0\u55357 \u56593  \{checkout.lockboxId\}\
+                                                </div>\
+                                                <div style=\{\{marginBottom: '8px', padding: '8px', background: '#fef3c7', borderRadius: '6px', display: 'inline-block'\}\}>\
+                                                    <span style=\{\{fontSize: '12px', fontWeight: '600', color: '#92400e'\}\}>Code: </span>\
+                                                    <span style=\{\{fontSize: '16px', fontWeight: 'bold', color: '#92400e', letterSpacing: '2px'\}\}>\
+                                                        \{checkout.shackleCode\}\
+                                                    </span>\
+                                                </div>\
+                                                <div style=\{\{fontSize: '14px', color: '#6b7280', marginBottom: '4px'\}\}>\
+                                                    \uc0\u55357 \u56525  \{checkout.propertyAddress\}\
+                                                </div>\
+                                                <div style=\{\{fontSize: '14px', color: '#6b7280', marginBottom: '4px'\}\}>\
+                                                    \uc0\u55357 \u56420  \{checkout.agentName\}\
+                                                </div>\
+                                                <div style=\{\{fontSize: '14px', color: '#6b7280'\}\}>\
+                                                    \uc0\u55357 \u56517  \{new Date(checkout.checkoutDate).toLocaleString()\}\
+                                                </div>\
+                                            </div>\
+                                            <button\
+                                                onClick=\{() => handleReturn(checkout.lockboxId)\}\
+                                                style=\{\{background: '#059669', color: 'white', padding: '10px 20px', borderRadius: '8px', fontWeight: '500', border: 'none', cursor: 'pointer'\}\}\
+                                            >\
+                                                Return\
+                                            </button>\
+                                        </div>\
+                                    ))\}\
+                                </div>\
+                            )\}\
+                        </div>\
+                    </div>\
+                </div>\
+            );\
+        \}\
+\
+        ReactDOM.render(<LockboxQRSystem />, document.getElementById('root'));\
+    </script>\
+</body>\
+</html>}
